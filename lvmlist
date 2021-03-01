@@ -1,0 +1,11 @@
+# kplvms °°° keeplvmsafe v2.9b by gcblauth@gmail.com
+# Snapshot an LVM or a list of LVMs then raw clone or mount.
+#
+# Example list:
+# A nice way of getting all the LVM links is: "ls /dev/VGNAME/*. >> lvmlist"
+# Script will ignore every commented line
+#
+#/dev/VG/dont-touch-me
+/dev/VG1/os-saturn
+/dev/VG1/os-pluto
+/dev/VG1/os-jupiter
