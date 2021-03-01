@@ -6,13 +6,13 @@ A fully customizabile (and improvable) bash script to automate live LVM backups.
 
 The script will make a snapshot of an lvm (or a list of lvms) and either fully copy it or mount it as a filesystem and sync its contents.
 
- *Using local fast disks/mounts can make 10GB VMs os backups as quick as 10 seconds. 1 minute for a 120GiB VMs OS * refer to #my numbers to check my test enviroment
- *Having the latest copy on the rotation directory makes restore quick and effective in a few seconds
- *If a list file is presented for an RAW operation, all snapshots will be done to the rotation directory before transferring to the backup directory
- *Using rsync on large arrays will transfer all file properties and ACLs. Only syncing the changes (the defauld) or can be changed to suit any case
- *A list can be user for an rsync as many rsync operations as needed
- *The script is divided in functions so the backup directory can only be mounted/unlocked when the copy takes place and locked after.
- *There's a oneline logging option of all operations for quick alert/mail for when automated
+ -Using local fast disks/mounts can make 10GB VMs os backups as quick as 10 seconds. 1 minute for a 120GiB VMs OS * refer to #my numbers to check my test enviroment
+ -Having the latest copy on the rotation directory makes restore quick and effective in a few seconds
+ -If a list file is presented for an RAW operation, all snapshots will be done to the rotation directory before transferring to the backup directory
+ -Using rsync on large arrays will transfer all file properties and ACLs. Only syncing the changes (the defauld) or can be changed to suit any case
+ -A list can be user for an rsync as many rsync operations as needed
+ -The script is divided in functions so the backup directory can only be mounted/unlocked when the copy takes place and locked after.
+ -There's a oneline logging option of all operations for quick alert/mail for when automated
  
 
 # Main Features
@@ -25,7 +25,7 @@ The script will make a snapshot of an lvm (or a list of lvms) and either fully c
 + BENCHMARK test the optimal speed for your bytesize snapshot raw copy to your rotation directory (tests mounting a snapshot and DDing it to your rotation dir)
 
 
-# Detailed actions
+# Detailed raw single file actions
 Concept: The steps for a raw copy of a running LVM:
 My LVM: LVM1/os-saturn 10GB
 My rotation mount: /mnt/rotation
@@ -34,7 +34,7 @@ My backup mount: /mnt/backup
 imroot@galaxyone:/bin# date
 Mon 01 Mar 2021 11:21:25 PM CET
 imroot@galaxyone:/bin# kplvm.sh raw /dev/LVM1/os-saturn /mnt/backup /mnt/rotation -qcow2
-  *actions
+  -actions
   1)test if /dev/LVM1/os-saturn is an LVM and what size it has.
   2)test if the rotation dir exists and what's the current free space
   3)test if the backup file /mnt/rotation/current/os-saturn.raw already exists
@@ -46,7 +46,7 @@ imroot@galaxyone:/bin# kplvm.sh raw /dev/LVM1/os-saturn /mnt/backup /mnt/rotatio
   9)umount/lock backup directory
   10)report and exit
 
-# Detailed actions
+# Detailed raw list actions
 
 Concept: The steps for a raw copy of a list of running LVMs:
 My list of LVMs: /root/backup/lvmlist
@@ -62,7 +62,7 @@ My backup mount: /mnt/backup
 imroot@galaxyone:/bin# date
 Mon 01 Mar 2021 11:23:32 PM CET
 imroot@galaxyone:/bin# kplvm.sh raw /root/backup/lvmlist /mnt/backup /mnt/rotation -qcow2
-  *actions
+  -actions
   1)test if /dev/LVM1/os-saturn is an LVM and what size it has.
   2)test if the rotation dir exists and what's the current free space
   3)test if the backup file /mnt/rotation/current/os-saturn.raw already exists
