@@ -26,7 +26,9 @@ The script will make a snapshot of an lvm (or a list of lvms) and either fully c
 
 
 # Detailed raw single file actions
+
 Concept: The steps for a raw copy of a running LVM:
+```
 My LVM: LVM1/os-saturn 10GB
 My rotation mount: /mnt/rotation
 My backup mount: /mnt/backup
@@ -45,10 +47,12 @@ imroot@galaxyone:/bin# kplvm.sh raw /dev/LVM1/os-saturn /mnt/backup /mnt/rotatio
   8)create a date directory (01_03_2021) and transfer (rsync even if its local) the .qcow2 file [-qcow2 option passed]
   9)umount/lock backup directory
   10)report and exit
+```
 
 # Detailed raw list actions
 
 Concept: The steps for a raw copy of a list of running LVMs:
+```
 My list of LVMs: /root/backup/lvmlist
 list details: (3 LVMs separated by lines)
         /root/backup/lvmlist contents:
@@ -85,6 +89,7 @@ imroot@galaxyone:/bin# kplvm.sh raw /root/backup/lvmlist /mnt/backup /mnt/rotati
   20)create a date directory (01_03_2021) and transfer (rsync even if its local) all the .qcow2 files [-qcow2 option passed]
   21)umount/lock backup directory
   22)report and exit
+```
 
 # Why ?
 
@@ -99,7 +104,7 @@ Maybe this can help you too and we can improve it together to help even more peo
 # Usage
 
 kplvms.sh [raw rsync recycle benchmark] [LVMDEV (with /dev) or LISTFILE (with lvms listed line by line)] [final backup dir] [rotation dir] [-qcow2]
-
+```
 -qcow2 switch will convert raw files before sending to final backup directory
 raw /dev/VG1/os-saturn /mnt/backup /mnt/rotation          raw backup an LVM to a raw file and transfer it
 raw /root/listfile /mnt/backup /mnt/rotation              raw backup a list of LVMs to raw files and transfer them
@@ -107,7 +112,7 @@ rsync /dev/VG1/hd-saturn /backup /mnt/vmtemp              mount LVM and rsync it
 raw /root/listfile /mnt/backup /mnt/rotation -qcow2       raw backup a list of LVMs to raw files, convert and transfer them
 recycle /mnt/rotation /mnt/archive                        recycle rotation dir /mnt/rotation/current - copy it's contents to another directory
 benchmark /dev/VG2/os-r2d2 /mnt/faststorage               do a series of raw dd if=LVM of=ROTATION DIR with different BS choose the best one
-
+```
 
 # My enviroment and my numbers
 
@@ -154,11 +159,25 @@ Total transfer time
 + Improve logging options
 + Create optional backup testing/hashing function
 + Incorporate Guest VM database/cache write to disk before snapshot
-+ Integrate with rsyncsnaphot (by far one of the best backup scripts out there www.github.com/rsyncsnapshot )
-+ Integrate with pixz (such an great idea for multithreaded highly compressed tape archiving www.github.com/pixz )
++ Integrate with rsnaphot or rsyncnapshot (great backup scripts https://github.com/rsnapshot/rsnapshot and https://github.com/Stonyx/RSyncSnapshot)
++ Integrate with pixz (such an great idea for multithreaded highly compressed tape archiving www.github.com/vasi/pixz )
 + Create an anonynous stats for usage and benchmarks
 + Separate config files
 + Create small db with operations and stats
 + Create alert system
 + Set backup function for the hypervisor itself (backup mdadm info, luks headers, config files, disk/partition mappings, ecc)
 + Measure impact with different configurations
+
+# Disclaimer
+
+This script is free software. You can redistribute it and/or modify it under the terms of the GNU
+General Public License Version 3 (or at your option any later version) as published by The Free
+Software Foundation.
+
+This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+General Public License for more details.
+
+If you did not received a copy of the GNU General Public License along with this script see
+http://www.gnu.org/copyleft/gpl.html or write to The Free Software Foundation, 675 Mass Ave,
+Cambridge, MA 02139, USA.
