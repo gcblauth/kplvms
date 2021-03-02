@@ -15,7 +15,7 @@ verS=3.0b
 #
 # todo: improve variable names, help and command list
 #
-# thanks to: many random sources and (only adapted code that i could find the source: dd benchmark from: tdg5 @dannyguinther
+# thanks to: many random sources and (only adapted code that I could find the source: dd benchmark from: tdg5 @dannyguinther
 #
 # This script is free software. You can redistribute it and/or modify it under the terms of the GNU
 # General Public License Version 3 (or at your option any later version) as published by The Free
@@ -68,8 +68,8 @@ defS() {
 ddBS=16384                         # the dd block size (bs=) parameter - try the benchmark feature to test the best value for your enviroment ! default 16M (16384)
 MOFFSET=1048576                    # Mount offset for when mounting the snapshot (Here aligned to the beginning of partition 2048 * 512 = 1048576)
 SZ=10G                             # snapshot size
-ROTT=current                       # Rotation directory (* must exist)
-dts=$(date '+%d_%m_%Y')            # Destination directory (in this case, DD_MM_AAAA) (created if non existent)
+ROTT=current                       # Rotation directory name (* must exist - wil be added to the rotation path ex. /mnt/rotation will be /mnt/rotation/current)
+dts=$(date '+%d_%m_%Y')            # Destination backup directory (in this case, DD_MM_AAAA) (created if non existent)
 
 ## Mail/Alerting
 maiL=0                             # Send Email results - 0: dont send emails / 1: send only script end emails / 2: send script start and end emails
@@ -85,7 +85,7 @@ RLOGFILE=/var/log/vmrbackup.log    # RSYNC transfer log file (rsync error file w
 LOGFILE=/var/log/vmbackup.log      # log file
 ERRFILE=/var/log/vmbackup.err      # error log file
 oneLOG=/root/vmone.log             # one line log
-Lverb=1                            # Log Verbosity - 0: only log / 1: echo normal cmds to stdout / 2: echo normal and error codes to stdout      
+Lverb=2                            # Output Verbosity - 0: only log / 1: echo normal cmds to stdout / 2: echo normal and error codes to stdout      
 lFORMAT="[%05.f-%s] - %s\n"        # normal logging format: [00001-DD/MM/AAAA - 00:00:00] - cool log message
 eFORMAT="%s\n"                     # normal output format : cool output message
 eLFORMAT="ERRORLOG - %s\n"         # error output format  : ERRORLOG - bad output message
@@ -152,19 +152,22 @@ moutT() {
                 sync
                 # read size before closing
                 freeBBa=$(numfmt --to iec --format "%8.4f" "$(df "$BB" | awk '{print $4"000"}'| tail -1)")
-##  Example umount for using luks
+## Example umount for using luks
 ##                umount $BB
 ##                cryptsetup luksClose sda_crypt >>$LOGFILE 2>>$ERRFILE
-##  Example umount nfs
+## Example umount nfs
 ##                umount $BB
-
+## Eample umount sshfs
+##                umount $BB
         else
 ##  Example for using luks on a local disk (remember this should be a backup?) or iSCSI (best suited) sshfs, smb, ecc...
 ##                cryptsetup luksOpen /dev/sda sda_crypt --key-file=/root/backup/backup.key >>$LOGFILE 2>>$ERRFILE
 ##                mount /dev/mapper/sda_crypt $BB >>$LOGFILE 2>>$ERRFILE 
 ##  Example for using nfs
 ##                mount -t nfs -o options host:/remote/backup $BB >>$LOGFILE 2>>$ERRFILE 
-                  sync
+## Example using sshfs
+## sshfs -o allow_other,default_permissions,IdentityFile=~/.ssh/id_rsa backup@xxx.xxx.xxx.xxx:/ $BB
+                sync
                 # read size after opening
                 freeBB=$(numfmt --to iec --format "%8.4f" "$(df "$BB" | awk '{print $4"000"}'| tail -1)")
                 lopB=1  # let our exit know it can display the partition size when we quit.
@@ -220,7 +223,7 @@ exiT() {
         readL
         loG "Log lines          now: $logLIN size: $logSZ  |  Errorlog lines    now: $elogLIN size: $elogSZ"
         loG "Script started : $dtss -- ended : $dt"
-        echo "$dtss -- $dt -- $logE -- Activities: $logN/$logT OK -- Disks: $logBT/$freeBT rot Now -- $freeBB/$freeBBa bkp -- errors: $((elogSZ-logER))" >>$oneLOG
+        echo "$dtss -- $dt -- $logE -- Activities: $logN/$logT OK -- Disks: $logBT/$freeBT rot Now -- $freeBB/$freeBBa bkp -- errors: $((elogSZ-logER)) -- ERRORLOG Count: $eCT" >>$oneLOG
         #shall we send a e-mail with the one line result? Added top process, df -h and free memory - in some cases you can add disk health if you have smartmontools
         if [ "$maiL" -ge "1" ]; then mailMSG="Hello from $(uname) System Admin.\nToday is: $dt\n\nThis is the result of this run:\n$(tail -n-1 ${oneLOG})\n\nDisks:\n$(df -h)\n\nMemory:\n$(free -mh)\n\nOur top consuming proccess:\n$(ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head)\nThis is the end. For now...\nEND --- keep lvm safe v$verS---------------------------------------" && mailME ${mailMSG}; fi
         loG "$dtss -- $dt -- $logE -- Activities: $logN/$logT OK -- Disks: $logBT/$freeBT rot Now -- $freeBB/$freeBBa bkp -- errors: $((elogSZ-logER))"
