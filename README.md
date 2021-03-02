@@ -170,7 +170,7 @@ Total transfer time
 
 # Disclaimer
 
-If this helps you consider sharing your experience and wno knows ? Buy me a beer ? ;)
+If this helps you, consider sharing your experience and wno knows ? Buy me a beer ? ;)
 
 This script is free software. You can redistribute it and/or modify it under the terms of the GNU
 General Public License Version 3 (or at your option any later version) as published by The Free
