@@ -601,7 +601,7 @@ bencH() {
         echo -e "\nBenchmarking mode. We will do many runs with different block size (bs=). $benT runs with the same size to get an proper average. Note that for this check, the sync cache will be emptied during each run"
         echo "You can edit the bencH() function to adjust the test file sizes, number of runs and the block sizes. (512 1024 2048 tend to perform badly in my experience.)"
         echo "original benchmark code: by tdg5 @dannyguinther https://github.com/tdg5/blog/blob/master/_includes/scripts/dd_ibs_test.sh"
-        echo "Creating snapshot "${vmname}"-snapbench"
+        echo "Creating snapshot ${vmname}-snapbench"
         lvcreate --size ${SZ} --snapshot --name "${vmname}"-snapbench "${1}"
         Bit=$(lvdisplay -v --units b "$1" | grep Size | awk '{print $3}')
         echo "LVM size is: $(numfmt --to iec --format "%8.4f" "$Bit") and we will use $(numfmt --to iec --format "%8.4f" "$bSIZE") data for our tests."
@@ -707,10 +707,10 @@ helP() {
 if [[ "$*" == *--help* ]]; then helP; fi
 echo -e "\nkplvms ${CYA}°°°${NC} keeplvmsafe v${verS} by gcblauth@gmail.com\n"
 if [ "$1" == "" ]; then echo "Missing arguments. '$0 --help' for help" && exit; fi
-if [ ! $EUID == 0 ]; then  echo -e "We should really be doing this as root. 'sudo $@' maybe ?" && exit; fi
-if [ "$1" == "raw" ]; then defS $@ && AraW "$2" "$3" "$4" "$5"; fi
-if [ "$1" == "rsync" ]; then defS $@ && ArsynC "$2" "$3" "$4"; fi
-if [ "$1" == "recycle" ]; then defS $@ && readL && recY "$2" "$3" "$4"; fi
-if [ "$1" == "benchmark" ]; then defS $@ && bencH "$2" "$3"; fi
+if [ ! $EUID == 0 ]; then  echo -e "We should really be doing this as root. 'sudo $*' maybe ?" && exit; fi
+if [ "$1" == "raw" ]; then defS "$@" && AraW "$2" "$3" "$4" "$5"; fi
+if [ "$1" == "rsync" ]; then defS "$@" && ArsynC "$2" "$3" "$4"; fi
+if [ "$1" == "recycle" ]; then defS "$@" && readL && recY "$2" "$3" "$4"; fi
+if [ "$1" == "benchmark" ]; then defS "$@" && bencH "$2" "$3"; fi
 echo -e "Invalid option. $1 is not recognized. Here's the help and the disclaimer one more time ${RED}(:${NC}\n"
 helP
