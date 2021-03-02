@@ -681,6 +681,7 @@ mailME() {
         # Send the message text and close
         echo -e "${Message}" >&3
         echo "." >&3 ; checkStatus
+        exec 3<&-
         return
 }
 ##### Help function
