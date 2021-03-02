@@ -1,6 +1,6 @@
-# kplvms
+# kplvms °°°
 
-Keep LVM safe
+Keep LVM safe °°°
 
 A fully customizabile (and improvable) bash script to automate live LVM backups.
 
