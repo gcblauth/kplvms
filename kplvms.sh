@@ -1,6 +1,6 @@
 #!/bin/bash
 verS=2.9b
-# kplvms °°° keeplvmsafe v2.7b by gcblauth@gmail.com
+# kplvms °°° keeplvmsafe v2.9b by gcblauth@gmail.com
 # Snapshot an LVM or a list of LVMs then raw clone or mount.
 #
 # Advanced options: convert before send: convert .raw to .qcow2 compressed before sending to final destination
@@ -39,7 +39,7 @@ verS=2.9b
 # main code     -       the thing that makes this work
 #############################################
 ## Visit this project page and share your results and feedback :) 
-## https://github.com/kplvms
+## https://github.com/gcblauth/kplvms
 #############################################
 #some colors
 NC='\033[0m' # No Color
@@ -58,14 +58,14 @@ ROTT=current                    # Rotation directory (* must exist)
 dts=$(date '+%d_%m_%Y')         # Destination directory (in this case, 25_12_2021) (created if non existent)
 
 ## Logging variables
-RLOGFILE=/root/vmrbackup.log    # RSYNC transfer log file
+RLOGFILE=/root/vmrbackup.log    # RSYNC transfer log file (rsync error file will always be ERRFILE)
 LOGFILE=/root/vmbackup.log      # log file
 ERRFILE=/root/vmbackup.err      # error log file
 oneLOG=/root/vmone.log          # one line log
-Lverb=1                         # Lverb - 0 - (only log)  - 1 - (echo normal cmds to stdout) - 2 - (echo normal and error codes to stdout)
+Lverb=1                         # Log verbosity and output - 0 - (only log)  - 1 - (echo normal cmds to stdout) - 2 - (echo normal and error codes to stdout)
 lFORMAT="[%05.f-%s] - %s\n"     # normal logging format: [00001-DD/MM/AAAA - 00:00:00] - cool log message
 eFORMAT="%s\n"                  # normal output format : cool output message
-eLFORMAT="ERRORLOG - %s\n"      # error output format  : ERRORLOG -  bad output message
+eLFORMAT="ERRORLOG - %s\n"      # error output format  : ERRORLOG - bad output message
 
 dateF="+%d/%m/%Y %T"            # datetime format
 logN=0                          # expected cycles var
@@ -73,7 +73,12 @@ logT=0                          # done cycles var
 eCT=0                           # error counter var
 lCT=0                           # log counter var
 dtss=$(date "$dateF")           # our start date and time stamp
-echo -e "rotation dir: $ROTT | dd blocksize: $ddBS | LVM snapsize: $SZ | log: $LOGFILE | error log: $ERRFILE | rsync log: $RLOGFILE | one line log: $oneLOG\nScript is starting...\n"
+# Log the Script started and the current mode
+loG "Script started in $1 mode"
+# Log our the current running variables:
+loG "rotation dir: $ROTT | dd blocksize: $ddBS | LVM snapsize: $SZ | log: $LOGFILE | error log: $ERRFILE | rsync log: $RLOGFILE | one line log: $oneLOG"
+# Display we are ready to go!
+echo -e "\nScript is starting...\n"
 }
 
 ##### function handle display/logging outside of command execution
@@ -103,7 +108,6 @@ loG() {
 ##
 ##
 ##
-
 readL() {
         logLIN=$(wc -l < $LOGFILE)
         logSZ=$(find $LOGFILE -printf "%s\n")
@@ -618,11 +622,11 @@ helP() {
         echo -e "\nkplvms ${CYA}°°°${NC} keeplvmsafe v${verS} by gcblauth@gmail.com\nScript to batch backup LVMs that are in use to raw or to rsync their contents.\nThis script will snapshot your LVMs and dd them to raw or mount them to rsync their contents.\n"
         echo -e "Usage: $0 [raw rsync recycle benchmark] [LVMDEV (with /dev) or LISTFILE (with lvms listed line by line)] [final backup dir] [rotation dir] -qcow2"
         echo -e "Add -qcow2 switch to convert raw files before sending to final backup directory.\n"
-        echo -e "ex. $0 raw /dev/VG2/os-r2d2 /mnt/backup /mnt/faststorage         raw backup an LVM to a raw file and transfer it"
-        echo -e "ex. $0 raw /listfile /mnt/backup /mnt/faststorage                raw backup a list of LVMs to raw files and transfer them"
-        echo -e "ex. $0 rsync /dev/VG1/array-marina /backup /mnt/point2           mount LVM and rsync it to /mnt/backup/lvmnam "
-        echo -e "ex. $0 raw /listfile /mnt/backup /mnt/faststorage -qcow2         raw backup a list of LVMs to raw files, convert and transfer them"
-        echo -e "ex. $0 recycle /mnt/faststorage /mnt/slowstorage                 recycle rotation dir now:$ROTT - copy it's contents to another location\n"
+        echo -e "ex. $0 raw /dev/VG1/os-r2d2 /mnt/backup /mnt/rotation            raw backup an LVM to a raw file and transfer it"
+        echo -e "ex. $0 raw /root/lvmlist /mnt/backup /mnt/rotation               raw backup a list of LVMs to raw files and transfer them"
+        echo -e "ex. $0 rsync /dev/VG2/hd-r2d2 /mnt/backup /mnt/lvmtemp           mount LVM and rsync it to /mnt/backup/hd-r2d2/"
+        echo -e "ex. $0 raw /root/lvmlist /mnt/backup /mnt/rotation -qcow2        raw backup a list of LVMs to raw files, convert to qcow2 and transfer them"
+        echo -e "ex. $0 recycle /mnt/rotation /mnt/bkparchive                     recycle rotation dir now:$ROTT - copy it's contents to another location"
         echo -e "ex. $0 benchmark /dev/VG2/os-r2d2 /mnt/faststorage               do a series of raw dd if=LVM of=ROTATION DIR with different BS choose the best one\n"
         exit
 }
@@ -630,9 +634,9 @@ helP() {
 if [ "$1" == "--help" ]; then helP; fi
 echo -e "\nkplvms ${CYA}°°°${NC} keeplvmsafe v${verS} by gcblauth@gmail.com\n"
 if [ "$1" == "" ]; then echo "Missing arguments. '$0 --help' for help" && exit; fi
-if [ "$1" == "raw" ]; then defS && AraW "$2" "$3" "$4" "$5"; fi
-if [ "$1" == "rsync" ]; then defS && ArsynC "$2" "$3" "$4"; fi
-if [ "$1" == "recycle" ]; then defS && readL && recY "$2" "$3" "$4"; fi
-if [ "$1" == "benchmark" ]; then defS && bencH "$2" "$3"; fi
+if [ "$1" == "raw" ]; then defS $1 && AraW "$2" "$3" "$4" "$5"; fi
+if [ "$1" == "rsync" ]; then defS $1 && ArsynC "$2" "$3" "$4"; fi
+if [ "$1" == "recycle" ]; then defS $1 && readL && recY "$2" "$3" "$4"; fi
+if [ "$1" == "benchmark" ]; then defS $1 && bencH "$2" "$3"; fi
 echo -e "Invalid option. $1 is not recognized. Here's the help and the disclaimer one more time ${RED}(:${NC}\n"
 helP
