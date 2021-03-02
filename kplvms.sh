@@ -101,7 +101,7 @@ loG "Script started in $1 mode"
 # Log our the current running variables:
 loG "rotation dir: $ROTT | dd blocksize: $ddBS | LVM snapsize: $SZ | log: $LOGFILE | error log: $ERRFILE | rsync log: $RLOGFILE | one line log: $oneLOG"
 #shall we send a e-mail with the script start and commandline ? Added top process, df -h and free memory - in some cases you can add disk health if you have smartmontools
-if [ "$maiL" == "2" ]; then mailMSG="Hello from $(uname), System Admin.\nToday is: $dt\n\nThe script is starting:\nCommand line:$@\n-------------\nDisks:\n$(df -h)\n\nMemory:\n$(free -mh)\n\nOur top consuming proccess:\n$(ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head)\n\nFinal result email will be sent when finished.\n--- keep lvm safe v$verS---------------------------------------" && mailME ${mailMSG}; fi
+if [ "$maiL" == "2" ]; then mailMSG="Hello from $(uname), System Admin.\nToday is: $dt\n\nThe script is starting:\nCommand line:$*\n-------------\nDisks:\n$(df -h)\n\nMemory:\n$(free -mh)\n\nOur top consuming proccess:\n$(ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head)\n\nFinal result email will be sent when finished.\n--- keep lvm safe v$verS---------------------------------------" && mailME ${mailMSG}; fi
 # Display we are ready to go!
 echo -e "\nScript is starting...\n"
 }
