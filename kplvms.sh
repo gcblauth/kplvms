@@ -48,8 +48,10 @@ CYAA='\033[1;35m'
 LG='\033[1;32m'
 RED='\033[0;31m'
 
-##### Definitions:
-#
+###### Definitions:
+##
+## $1 has first argument for logging purposes
+##
 defS() {
 ddBS=524288                     # the dd block size (bs=) parameter - try the benchmark feature to test the best value for your enviroment !
 MOFFSET=1048576                 # Mount offset for when mounting the snapshot (Here aligned to the beginning of partition 2048 * 512 = 1048576)
@@ -127,18 +129,18 @@ moutT() {
                 sync
                 # read size before closing
                 freeBBa=$(numfmt --to iec --format "%8.4f" "$(df "$BB" | awk '{print $4"000"}'| tail -1)")
-##  Example for using luks
+##  Example umount for using luks
 ##                umount $BB
 ##                cryptsetup luksClose sda_crypt >>$LOGFILE 2>>$ERRFILE
 ##  Example umount nfs
 ##                umount $BB
 
         else
-##  Example for using luks
+##  Example for using luks on a local disk (remember this should be a backup?) or iSCSI (best suited) sshfs, smb, ecc...
 ##                cryptsetup luksOpen /dev/sda sda_crypt --key-file=/root/backup/backup.key >>$LOGFILE 2>>$ERRFILE
 ##                mount /dev/mapper/sda_crypt $BB >>$LOGFILE 2>>$ERRFILE 
 ##  Example for using nfs
-##                mount -t nfs -o options host:/remote/export $BB >>$LOGFILE 2>>$ERRFILE 
+##                mount -t nfs -o options host:/remote/backup $BB >>$LOGFILE 2>>$ERRFILE 
                   sync
                 # read size after opening
                 freeBB=$(numfmt --to iec --format "%8.4f" "$(df "$BB" | awk '{print $4"000"}'| tail -1)")
@@ -546,10 +548,14 @@ recY() {
 }
 ##### Benchmark function
 ##
-## 1) Test if directories and LVM exists
-## 2) Creates a snapshot
-## 3) Fires the tests
+## 1) Will mount an lvm snapshot and do a series of tests.
+## 2) There are 2 important variables. bSIZE (The amount of data to test from the snapshot) and benT (The number of runs for each blocksize)
+## 3) The cycle is not random and its defined inside the 'for BLOCK_SIZE in .....' line
 ##
+##
+## The default is 3 runs, 512 MiB of the snapshot and 4M 8M 16M 32M 64M 128M 256M 512M 1024M. You can fine tune this at your will.
+##
+
 bencH() {
         # The bSIZE variable tells how many bits should we transfer during our tests. Here are some examples:
         #bSIZE=1073741824                                                       # test data size. here 1GiB
@@ -576,7 +582,7 @@ bencH() {
         PRINTF_FORMAT="%9s : %s"
         # Block sizes of 512b 1K 2K 4K 8K 16K 32K 64K 128K 256K 512K 1M 2M 4M 8M 16M 32M 64M
         # for BLOCK_SIZE in 4096 2048 8192 16384 1024 512 32768 65536 131072 262144 524288 1048576 2097152 4194304 8388608 16777216 33554432 67108864; do
-        for BLOCK_SIZE in 4096 8192 16384 32768 65536 131072 262144 524288 33554432; do
+        for BLOCK_SIZE in 4096 8192 16384 32768 65536 131072 262144 524288 1048576; do
 #        for BLOCK_SIZE in 16384 32768 65536 131072 262144 524288 33554432 67108864; do
                 trap 'sleep 1 && rm -f ${2}/${ROTT}/${vmname}.ben && sleep 1 && lvremove --force "${1}"-snapbench && echo "CTRL+C Aborted..." && exit' 2
                 benN=1
@@ -624,16 +630,17 @@ helP() {
         echo -e "Add -qcow2 switch to convert raw files before sending to final backup directory.\n"
         echo -e "ex. $0 raw /dev/VG1/os-r2d2 /mnt/backup /mnt/rotation            raw backup an LVM to a raw file and transfer it"
         echo -e "ex. $0 raw /root/lvmlist /mnt/backup /mnt/rotation               raw backup a list of LVMs to raw files and transfer them"
-        echo -e "ex. $0 rsync /dev/VG2/hd-r2d2 /mnt/backup /mnt/lvmtemp           mount LVM and rsync it to /mnt/backup/hd-r2d2/"
         echo -e "ex. $0 raw /root/lvmlist /mnt/backup /mnt/rotation -qcow2        raw backup a list of LVMs to raw files, convert to qcow2 and transfer them"
+        echo -e "ex. $0 rsync /dev/VG2/hd-r2d2 /mnt/backup /mnt/lvmtemp           mount LVM and rsync it to /mnt/backup/hd-r2d2/"
         echo -e "ex. $0 recycle /mnt/rotation /mnt/bkparchive                     recycle rotation dir now:$ROTT - copy it's contents to another location"
         echo -e "ex. $0 benchmark /dev/VG2/os-r2d2 /mnt/faststorage               do a series of raw dd if=LVM of=ROTATION DIR with different BS choose the best one\n"
         exit
 }
 ##### MAIN ######################################################################################
-if [ "$1" == "--help" ]; then helP; fi
+if [[ "$*" == *--help* ]]; then helP; fi
 echo -e "\nkplvms ${CYA}°°°${NC} keeplvmsafe v${verS} by gcblauth@gmail.com\n"
 if [ "$1" == "" ]; then echo "Missing arguments. '$0 --help' for help" && exit; fi
+if [ ! $EUID == 0 ]; then  echo -e "We should really be doing this as root. 'sudo $@' maybe ?" && exit; fi
 if [ "$1" == "raw" ]; then defS $1 && AraW "$2" "$3" "$4" "$5"; fi
 if [ "$1" == "rsync" ]; then defS $1 && ArsynC "$2" "$3" "$4"; fi
 if [ "$1" == "recycle" ]; then defS $1 && readL && recY "$2" "$3" "$4"; fi
