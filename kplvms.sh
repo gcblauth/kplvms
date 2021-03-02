@@ -1,21 +1,33 @@
 #!/bin/bash
-verS=2.9b
-# kplvms °°° keeplvmsafe v2.9b by gcblauth@gmail.com
+verS=3.0b
+# kplvms °°° keeplvmsafe v3.0b by gcblauth@gmail.com
 # Snapshot an LVM or a list of LVMs then raw clone or mount.
 #
 # Advanced options: convert before send: convert .raw to .qcow2 compressed before sending to final destination
 #                   benchmark: test run dd from LVM to your rotation dir with many block size options (bs=)
-#
-# Written and created by:   Gabriel Blauth
-# Last Changed: 2021-3-01
+#                   
+# Copyright (C) 2007-2021 gcblauth
+# Written and created by: Gabriel Blauth
+# Last Changed: 2021-3-02
 #
 # Poorly written but hey?! it works!
 # Distribute freely
 #
-# todo: improve help and command list
+# todo: improve variable names, help and command list
 #
-# thanks to: many random sources and the only copied code for the dd benchmark from: tdg5 @dannyguinther
+# thanks to: many random sources and (only adapted code that i could find the source: dd benchmark from: tdg5 @dannyguinther
 #
+# This script is free software. You can redistribute it and/or modify it under the terms of the GNU
+# General Public License Version 3 (or at your option any later version) as published by The Free
+# Software Foundation.
+#
+# This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# If you did not received a copy of the GNU General Public License along with this script see
+# http://www.gnu.org/copyleft/gpl.html or write to The Free Software Foundation, 675 Mass Ave,
+# Cambridge, MA 02139, USA.
 ################################################################################
 # Constant Definitions
 # Change the values in this section to match your setup
@@ -35,6 +47,7 @@ verS=2.9b
 # AconverT()    -       convert function
 # recY()        -       recycle function
 # bencH()       -       benchmark function
+# mailME()      -       function to send email - interact with an smtp
 # helP()        -       help function
 # main code     -       the thing that makes this work
 #############################################
@@ -50,24 +63,33 @@ RED='\033[0;31m'
 
 ###### Definitions:
 ##
-## $1 has first argument for logging purposes
+## We are passing all command line arguments for logging purposes
 ##
 defS() {
-ddBS=524288                     # the dd block size (bs=) parameter - try the benchmark feature to test the best value for your enviroment !
-MOFFSET=1048576                 # Mount offset for when mounting the snapshot (Here aligned to the beginning of partition 2048 * 512 = 1048576)
-SZ=10G                          # snapshot size
-ROTT=current                    # Rotation directory (* must exist)
-dts=$(date '+%d_%m_%Y')         # Destination directory (in this case, DD_MM_AAAA) (created if non existent)
+ddBS=16384                         # the dd block size (bs=) parameter - try the benchmark feature to test the best value for your enviroment ! default 16M (16384)
+MOFFSET=1048576                    # Mount offset for when mounting the snapshot (Here aligned to the beginning of partition 2048 * 512 = 1048576)
+SZ=10G                             # snapshot size
+ROTT=current                       # Rotation directory (* must exist)
+dts=$(date '+%d_%m_%Y')            # Destination directory (in this case, DD_MM_AAAA) (created if non existent)
+
+## Mail/Alerting
+maiL=0                             # Send Email results - 0: dont send emails / 1: send only script end emails / 2: send script start and end emails
+MyHost=$(hostname)                 # Hostname (from)
+MailHost="127.0.0.1"               # SMTP Host
+MailPort=25                        # SMTP Port
+FromAddr="backup@${MyHost}"        # From address
+ToAddr="your@email.com"            # destination address
+Subject="KPLVMS ${verS} Status"    # subject field (wouldn't it help a lot for filtering)
 
 ## Logging variables
 RLOGFILE=/var/log/vmrbackup.log    # RSYNC transfer log file (rsync error file will always be ERRFILE)
 LOGFILE=/var/log/vmbackup.log      # log file
 ERRFILE=/var/log/vmbackup.err      # error log file
-oneLOG=/root/vmone.log          # one line log
-Lverb=1                         # Log verbosity and output - 0 - (only log)  - 1 - (echo normal cmds to stdout) - 2 - (echo normal and error codes to stdout)
-lFORMAT="[%05.f-%s] - %s\n"     # normal logging format: [00001-DD/MM/AAAA - 00:00:00] - cool log message
-eFORMAT="%s\n"                  # normal output format : cool output message
-eLFORMAT="ERRORLOG - %s\n"      # error output format  : ERRORLOG - bad output message
+oneLOG=/root/vmone.log             # one line log
+Lverb=1                            # Log Verbosity - 0: only log / 1: echo normal cmds to stdout / 2: echo normal and error codes to stdout      
+lFORMAT="[%05.f-%s] - %s\n"        # normal logging format: [00001-DD/MM/AAAA - 00:00:00] - cool log message
+eFORMAT="%s\n"                     # normal output format : cool output message
+eLFORMAT="ERRORLOG - %s\n"         # error output format  : ERRORLOG - bad output message
 
 dateF="+%d/%m/%Y %T"            # datetime format
 logN=0                          # expected cycles var
@@ -79,6 +101,8 @@ dtss=$(date "$dateF")           # our start date and time stamp
 loG "Script started in $1 mode"
 # Log our the current running variables:
 loG "rotation dir: $ROTT | dd blocksize: $ddBS | LVM snapsize: $SZ | log: $LOGFILE | error log: $ERRFILE | rsync log: $RLOGFILE | one line log: $oneLOG"
+#shall we send a e-mail with the script start and commandline ? Added top process, df -h and free memory - in some cases you can add disk health if you have smartmontools
+if [ "$maiL" == "2" ]; then mailMSG="Hello from $(uname), System Admin.\nToday is: $dt\n\nThe script is starting:\nCommand line:$@\n-------------\nDisks:\n$(df -h)\n\nMemory:\n$(free -mh)\n\nOur top consuming proccess:\n$(ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head)\n\nFinal result email will be sent when finished.\n--- keep lvm safe v$verS---------------------------------------" && mailME ${mailMSG}; fi
 # Display we are ready to go!
 echo -e "\nScript is starting...\n"
 }
@@ -184,14 +208,22 @@ exiT() {
                 freeBT=$(numfmt --to iec --format "%8.4f" "$(df "$BT" | awk '{print $4"000"}'| tail -1)")
                 loG "Free ROTATION memory        after: $freeBT"
         fi
+        if [ "$lopB" == "1" ]; then
                 loG "Free BACKUP memory before start: $freeBB"
                 loG "Free BACKUP memory        after: $freeBBa"
+                else
+                loG "BACKUP memory before and after start: not available. never mounted."
+                freeBB="not mounted"
+                freeBBa="not mounted"
+        fi
         loG "Log lines before start: $logLIN size: $logSZ  |  Errorlog lines before: $elogLIN size: $elogSZ"
         logER=$elogSZ
         readL
         loG "Log lines          now: $logLIN size: $logSZ  |  Errorlog lines    now: $elogLIN size: $elogSZ"
         loG "Script started : $dtss -- ended : $dt"
         echo "$dtss -- $dt -- $logE -- Activities: $logN/$logT OK -- Disks: $logBT/$freeBT rot Now -- $freeBB/$freeBBa bkp -- errors: $((elogSZ-logER))" >>$oneLOG
+        #shall we send a e-mail with the one line result? Added top process, df -h and free memory - in some cases you can add disk health if you have smartmontools
+        if [ "$maiL" -ge "1" ]; then mailMSG="Hello from $(uname) System Admin.\nToday is: $dt\n\nThis is the result of this run:\n$(tail -n-1 ${oneLOG})\n\nDisks:\n$(df -h)\n\nMemory:\n$(free -mh)\n\nOur top consuming proccess:\n$(ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head)\nThis is the end. For now...\nEND --- keep lvm safe v$verS---------------------------------------" && mailME ${mailMSG}; fi
         loG "$dtss -- $dt -- $logE -- Activities: $logN/$logT OK -- Disks: $logBT/$freeBT rot Now -- $freeBB/$freeBBa bkp -- errors: $((elogSZ-logER))"
         loG "This is the end. For now ;)"
         loG "END --- keep lvm safe v$verS--------------------------------------------------------------------"
@@ -615,6 +647,42 @@ bencH() {
                 echo "STOP. Cant continue benchmark!"
         fi
         exit
+}
+##### Mail function
+##
+## Function to send an email
+##
+## source: the internet (could'nt find the author. would love to give the right credit
+## var $1: message to send
+##
+##
+mailME() {
+        Message="${1}"
+        # we need a function to check if the remote smtp is replying to our requests
+        function checkStatus {
+                read -u 3 sts line
+                expect=250
+                if [ $# -eq 1 ] ; then
+                        expect="${1}"
+                fi
+                if [ $sts -ne $expect ] ; then
+                        loG "MAIL Error: ${line}" err
+                        return
+                fi
+        }
+        # lets open the socket for interacting with the smtp
+        exec 3<>/dev/tcp/${MailHost}/${MailPort} ; checkStatus 220
+        echo "HELO ${MyHost}" >&3 ; checkStatus
+        echo "MAIL FROM: ${FromAddr}" >&3 ; checkStatus
+        echo "RCPT TO: ${ToAddr}" >&3 ; checkStatus
+        echo "DATA" >&3 ; checkStatus 354
+        echo "Subject: ${Subject}" >&3
+        # Inser a blank in the message or the message text will result in no text being sent.
+        echo "" >&3
+        # Send the message text and close
+        echo -e "${Message}" >&3
+        echo "." >&3 ; checkStatus
+        return
 }
 ##### Help function
 ##
