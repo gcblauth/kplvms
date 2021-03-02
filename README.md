@@ -6,14 +6,14 @@ A fully customizabile (and improvable) bash script to automate live LVM backups.
 
 The script will make a snapshot of an lvm (or a list of lvms) and either fully copy it or mount it as a filesystem and sync its contents.
 
- - Using local fast disks/mounts can make 10GB VMs os backups as quick as 10 seconds. 1 minute for a 120GiB VMs OS *refer to my numbers to check my test enviroment
+ - Using local fast disks/mounts can make 10GiB VM LVM backup as quick as 10 seconds. 1 minute for a 120GiB VM OS /refer to my numbers to check my test enviroment
  - Having the latest copy on the rotation directory makes restore quick and effective in a few seconds
  - If a list file is presented for an RAW operation, all snapshots will be done to the rotation directory before transferring to the backup directory
- - Using rsync on large arrays will transfer all file properties and ACLs. Only syncing the changes (the defauld) or can be changed to suit any case
- - A list can be user for an rsync as many rsync operations as needed
+ - Using rsync on large arrays will transfer all file properties and ACLs. Only syncing the changes (the default) or it can be changed to suit any case
+ - A list can be used for an rsyncyng as many rsync operations as needed
  - The script is divided in functions so the backup directory can only be mounted/unlocked when the copy takes place and locked after.
  - There's a oneline logging option of all operations for quick alert/mail for when automated
- 
+ - A simple sendmail function to share the the run results and some basic system info
 
 # Main Features
 
@@ -164,11 +164,13 @@ Total transfer time
 + Create an anonynous stats for usage and benchmarks
 + Separate config files
 + Create small db with operations and stats
-+ Create alert system
++ Improve email/alert system
 + Set backup function for the hypervisor itself (backup mdadm info, luks headers, config files, disk/partition mappings, ecc)
 + Measure impact with different configurations
 
 # Disclaimer
+
+If this helps you consider sharing your experience and wno knows ? Buy me a beer ? ;)
 
 This script is free software. You can redistribute it and/or modify it under the terms of the GNU
 General Public License Version 3 (or at your option any later version) as published by The Free
