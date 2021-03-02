@@ -6,13 +6,13 @@ A fully customizabile (and improvable) bash script to automate live LVM backups.
 
 The script will make a snapshot of an lvm (or a list of lvms) and either fully copy it or mount it as a filesystem and sync its contents.
 
- -Using local fast disks/mounts can make 10GB VMs os backups as quick as 10 seconds. 1 minute for a 120GiB VMs OS * refer to #my numbers to check my test enviroment
- -Having the latest copy on the rotation directory makes restore quick and effective in a few seconds
- -If a list file is presented for an RAW operation, all snapshots will be done to the rotation directory before transferring to the backup directory
- -Using rsync on large arrays will transfer all file properties and ACLs. Only syncing the changes (the defauld) or can be changed to suit any case
- -A list can be user for an rsync as many rsync operations as needed
- -The script is divided in functions so the backup directory can only be mounted/unlocked when the copy takes place and locked after.
- -There's a oneline logging option of all operations for quick alert/mail for when automated
+ - Using local fast disks/mounts can make 10GB VMs os backups as quick as 10 seconds. 1 minute for a 120GiB VMs OS *refer to my numbers to check my test enviroment
+ - Having the latest copy on the rotation directory makes restore quick and effective in a few seconds
+ - If a list file is presented for an RAW operation, all snapshots will be done to the rotation directory before transferring to the backup directory
+ - Using rsync on large arrays will transfer all file properties and ACLs. Only syncing the changes (the defauld) or can be changed to suit any case
+ - A list can be user for an rsync as many rsync operations as needed
+ - The script is divided in functions so the backup directory can only be mounted/unlocked when the copy takes place and locked after.
+ - There's a oneline logging option of all operations for quick alert/mail for when automated
  
 
 # Main Features
