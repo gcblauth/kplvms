@@ -23,8 +23,8 @@ verS=2.9b
 # Functions:
 # defS()        -       definitions
 # loG()         -       log and display
-# readL()       -       read previus log status
-# moutT()      -        mount dest dir or prepare nfs/sshfs/luks
+# readL()       -       read previous log status
+# moutT()      -        mount or prepare backup dir. (nfs/sshfs/luks...)
 # spacE()       -       verify space
 # exiT()        -       exit function after operations (besides benchmark)
 # AraW()        -       raw main function
@@ -57,12 +57,12 @@ ddBS=524288                     # the dd block size (bs=) parameter - try the be
 MOFFSET=1048576                 # Mount offset for when mounting the snapshot (Here aligned to the beginning of partition 2048 * 512 = 1048576)
 SZ=10G                          # snapshot size
 ROTT=current                    # Rotation directory (* must exist)
-dts=$(date '+%d_%m_%Y')         # Destination directory (in this case, 25_12_2021) (created if non existent)
+dts=$(date '+%d_%m_%Y')         # Destination directory (in this case, DD_MM_AAAA) (created if non existent)
 
 ## Logging variables
-RLOGFILE=/root/vmrbackup.log    # RSYNC transfer log file (rsync error file will always be ERRFILE)
-LOGFILE=/root/vmbackup.log      # log file
-ERRFILE=/root/vmbackup.err      # error log file
+RLOGFILE=/var/log/vmrbackup.log    # RSYNC transfer log file (rsync error file will always be ERRFILE)
+LOGFILE=/var/log/vmbackup.log      # log file
+ERRFILE=/var/log/vmbackup.err      # error log file
 oneLOG=/root/vmone.log          # one line log
 Lverb=1                         # Log verbosity and output - 0 - (only log)  - 1 - (echo normal cmds to stdout) - 2 - (echo normal and error codes to stdout)
 lFORMAT="[%05.f-%s] - %s\n"     # normal logging format: [00001-DD/MM/AAAA - 00:00:00] - cool log message
@@ -641,9 +641,9 @@ if [[ "$*" == *--help* ]]; then helP; fi
 echo -e "\nkplvms ${CYA}°°°${NC} keeplvmsafe v${verS} by gcblauth@gmail.com\n"
 if [ "$1" == "" ]; then echo "Missing arguments. '$0 --help' for help" && exit; fi
 if [ ! $EUID == 0 ]; then  echo -e "We should really be doing this as root. 'sudo $@' maybe ?" && exit; fi
-if [ "$1" == "raw" ]; then defS $1 && AraW "$2" "$3" "$4" "$5"; fi
-if [ "$1" == "rsync" ]; then defS $1 && ArsynC "$2" "$3" "$4"; fi
-if [ "$1" == "recycle" ]; then defS $1 && readL && recY "$2" "$3" "$4"; fi
-if [ "$1" == "benchmark" ]; then defS $1 && bencH "$2" "$3"; fi
+if [ "$1" == "raw" ]; then defS $@ && AraW "$2" "$3" "$4" "$5"; fi
+if [ "$1" == "rsync" ]; then defS $@ && ArsynC "$2" "$3" "$4"; fi
+if [ "$1" == "recycle" ]; then defS $@ && readL && recY "$2" "$3" "$4"; fi
+if [ "$1" == "benchmark" ]; then defS $@ && bencH "$2" "$3"; fi
 echo -e "Invalid option. $1 is not recognized. Here's the help and the disclaimer one more time ${RED}(:${NC}\n"
 helP
