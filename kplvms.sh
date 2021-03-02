@@ -57,7 +57,6 @@ verS=3.0b
 #some colors
 NC='\033[0m' # No Color
 CYA='\033[0;36m'
-CYAA='\033[1;35m'
 LG='\033[1;32m'
 RED='\033[0;31m'
 
