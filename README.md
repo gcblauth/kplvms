@@ -155,7 +155,7 @@ Total transfer time
 (I have a dream)
 
 + Improve bash code and check for dummy coding (I use this myself so I never destroyed anything. Help me keep it that way :)
-+ Improve commments all along 
++ Improve commments, variable names and syntaxes all along (Expect to find different systaxes for doing same things... should standarize to a more efficient way)
 + Improve logging options
 + Create optional backup testing/hashing function
 + Incorporate Guest VM database/cache write to disk before snapshot
@@ -165,7 +165,7 @@ Total transfer time
 + Separate config files
 + Create small db with operations and stats
 + Improve email/alert system
-+ Set backup function for the hypervisor itself (backup mdadm info, luks headers, config files, disk/partition mappings, ecc)
++ Set backup function for the hypervisor itself (backup mdadm info, luks headers, config files, disk/partition mappings, ecc) - today I backup the whole lvm disk
 + Measure impact with different configurations
 
 # Disclaimer
